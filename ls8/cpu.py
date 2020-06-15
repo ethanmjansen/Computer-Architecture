@@ -7,7 +7,11 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.pc = 0
+
 
     def load(self):
         """Load a program into memory."""
@@ -60,6 +64,43 @@ class CPU:
 
         print()
 
+    
+    def ram_read(self, mar):
+        """mar = Memory Address Register"""
+
+        return self.ram[mar]
+
+    
+    def ram_write(self, mar, mdr):
+        """mdr = Memory Data Register"""
+
+        self.ram[mar] = mdr
+
     def run(self):
         """Run the CPU."""
-        pass
+
+        LDI = 0b10000010
+        PRN = 0b01000111
+        HLT = 0b00000001
+
+
+        while True:
+
+            ir = self.ram_read(self.pc) # Instruction Register
+
+            operand_a = self.ram_read(self.pc + 1)
+            operand_b = self.ram_read(self.pc + 2)
+
+            if ir == LDI: # Load "Immediate"
+
+                self.ram_write(operand_a, operand_b)
+                self.pc += 3
+
+            if ir == PRN: # Print
+                
+                print(self.ram[operand_a])
+                self.pc += 2
+                
+            elif ir == HLT: # Halt
+                return exit()
+
