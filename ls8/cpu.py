@@ -11,28 +11,37 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
+        self.running = True
 
+        self.branch_table = {
+             0b10000010: self.LDI,
+             0b01000111: self.PRN,
+             0b00000001: self.HLT,
+             0b10100010: self.MUL
+        }
+        
 
     def load(self):
         """Load a program into memory."""
 
+        filename = sys.argv[1]
+        
+        # TODO: error checking on sys.argv
         address = 0
 
-        # For now, we've just hardcoded a program:
+        with open(filename, 'r') as f:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
+            for line in f:
 
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+                line = line.split('#')
+                line = line[0].strip()
+
+                if line == '':
+                    
+                    continue
+
+                self.ram[address] = int(line, 2)
+                address += 1
 
 
     def alu(self, op, reg_a, reg_b):
@@ -40,7 +49,10 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
+        
+        elif op == "MUL":
+            self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
+
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -76,31 +88,37 @@ class CPU:
 
         self.ram[mar] = mdr
 
+    def LDI(self, a=None, b=None):
+        """Load Register Immediate"""
+
+        self.reg[a] = b
+        self.pc += 3
+
+    def PRN(self, a=None, b=None):
+        """Print"""
+
+        print(self.reg[a])
+        self.pc += 2
+
+    def HLT(self, a=None, b=None):
+        """Halt"""
+
+        self.running = False
+
+    def MUL(self, a=None, b=None):
+        """Multiply"""
+
+        self.alu('MUL', a, b)
+        self.pc += 3
+
     def run(self):
         """Run the CPU."""
 
-        LDI = 0b10000010
-        PRN = 0b01000111
-        HLT = 0b00000001
+        while self.running:
 
-
-        while True:
-
-            ir = self.ram_read(self.pc) # Instruction Register
+            IR = self.ram_read(self.pc) # Instruction Register
 
             operand_a = self.ram_read(self.pc + 1)
             operand_b = self.ram_read(self.pc + 2)
 
-            if ir == LDI: # Load "Immediate"
-
-                self.ram_write(operand_a, operand_b)
-                self.pc += 3
-
-            if ir == PRN: # Print
-                
-                print(self.ram[operand_a])
-                self.pc += 2
-                
-            elif ir == HLT: # Halt
-                return exit()
-
+            self.branch_table[IR](operand_a, operand_b)
