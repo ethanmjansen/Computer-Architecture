@@ -12,12 +12,16 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
         self.running = True
+        self.sp = 7
+        self.reg[self.sp] = 0xf4
 
         self.branch_table = {
              0b10000010: self.LDI,
              0b01000111: self.PRN,
              0b00000001: self.HLT,
-             0b10100010: self.MUL
+             0b10100010: self.MUL,
+             0b01000101: self.PUSH,
+             0b01000110: self.POP
         }
         
 
@@ -88,11 +92,13 @@ class CPU:
 
         self.ram[mar] = mdr
 
+
     def LDI(self, a=None, b=None):
         """Load Register Immediate"""
 
         self.reg[a] = b
         self.pc += 3
+
 
     def PRN(self, a=None, b=None):
         """Print"""
@@ -100,16 +106,49 @@ class CPU:
         print(self.reg[a])
         self.pc += 2
 
+
     def HLT(self, a=None, b=None):
         """Halt"""
 
         self.running = False
+
 
     def MUL(self, a=None, b=None):
         """Multiply"""
 
         self.alu('MUL', a, b)
         self.pc += 3
+
+
+    def PUSH(self, a=None, b=None):
+        """Add to the Stack."""
+
+        self.reg[self.sp] -= 1 # decrement sp
+
+        reg_num = self.ram[self.pc + 1]
+        value = self.reg[reg_num]
+
+        top_of_stack_addr = self.reg[self.sp]
+
+        self.ram[top_of_stack_addr] = value
+
+        self.pc += 2
+
+
+    def POP(self, a=None, b=None):
+        """Take off the top of the Stack."""
+
+        top_of_stack_addr = self.reg[self.sp]
+
+        value = self.ram[top_of_stack_addr]
+
+        reg_num = self.ram[self.pc +1]
+        self.reg[reg_num] = value
+
+        self.reg[self.sp] += 1 # increment sp
+
+        self.pc += 2
+
 
     def run(self):
         """Run the CPU."""
