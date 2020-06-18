@@ -21,7 +21,10 @@ class CPU:
              0b00000001: self.HLT,
              0b10100010: self.MUL,
              0b01000101: self.PUSH,
-             0b01000110: self.POP
+             0b01000110: self.POP,
+             0b01010000: self.CALL,
+             0b00010001: self.RET,
+             0b10100000: self.ADD
         }
         
 
@@ -119,6 +122,12 @@ class CPU:
         self.alu('MUL', a, b)
         self.pc += 3
 
+    def ADD(self, a=None, b=None):
+        """Addition"""
+
+        self.alu('ADD', a, b)
+        self.pc += 3
+
 
     def PUSH(self, a=None, b=None):
         """Add to the Stack."""
@@ -148,6 +157,29 @@ class CPU:
         self.reg[self.sp] += 1 # increment sp
 
         self.pc += 2
+
+    def CALL(self, a=None, b=None):
+        """Calls a subroutine instruction."""
+
+        return_addr = self.pc + 2 # RET location
+
+        self.reg[self.sp] -= 1
+        self.ram[self.reg[self.sp]] = return_addr
+
+        reg_num = self.ram[self.pc +1]
+        subroutine_addr = self.reg[reg_num]
+
+        # The call
+        self.pc = subroutine_addr
+
+    
+    def RET(self, a=None, b=None):
+        """Return from subroutine."""
+
+        return_addr = self.ram[self.reg[self.sp]]
+        self.pc = return_addr
+
+        self.reg[self.sp] += 1
 
 
     def run(self):
