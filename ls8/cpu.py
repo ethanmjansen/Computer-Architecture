@@ -19,6 +19,7 @@ class CPU:
         self.g = 0
 
         self.branch_table = {
+             0b00000000: self.NOP,
              0b10000010: self.LDI,
              0b01000111: self.PRN,
              0b00000001: self.HLT,
@@ -28,10 +29,21 @@ class CPU:
              0b01010000: self.CALL,
              0b00010001: self.RET,
              0b10100000: self.ADD,
+             0b10100001: self.SUB,
              0b10100111: self.CMP,
              0b01010100: self.JMP,
              0b01010101: self.JEQ,
-             0b01010110: self.JNE
+             0b01010110: self.JNE,
+             0b10101000: self.AND,
+             0b01101001: self.NOT,
+             0b10101010: self.OR,
+             0b10101011: self.XOR,
+             0b01100101: self.INC,
+             0b01100110: self.DEC,
+             0b10100011: self.DIV,
+             0b10100100: self.MOD,
+             0b10101100: self.SHL,
+             0b10101101: self.SHR
         }
         
 
@@ -63,9 +75,42 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
+
+        elif op == "SUB":
+            self.reg[reg_a] -= self.reg[reg_b]
+
+        elif op == "AND":
+            self.reg[reg_a] &= self.reg[reg_b]
+
+        elif op == "OR":
+            self.reg[reg_a] |= self.reg[reg_b]
+
+        elif op == "XOR":
+            self.reg[reg_a] ^= self.reg[reg_b]
+
+        elif op == "NOT":
+            self.reg[reg_b] = ~self.reg[reg_b]
+
+        elif op == "INC":
+            self.reg[reg_a] += 1
+
+        elif op == "DEC":
+            self.reg[reg_a] -= 1
         
         elif op == "MUL":
-            self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
+            self.reg[reg_a] *= self.reg[reg_b]
+
+        elif op == "DIV":
+            self.reg[reg_a] /= self.reg[reg_b]
+
+        elif op == "MOD":
+            self.reg[reg_a] %= self.reg[reg_b]
+
+        elif op == "SHL":
+            self.reg[reg_a] << self.reg[reg_b]
+
+        elif op == "SHR":
+            self.reg[reg_a] >> self.reg[reg_b]
 
         elif op == "CMP":
             if self.reg[reg_a] == self.reg[reg_b]:
@@ -119,6 +164,11 @@ class CPU:
         self.ram[mar] = mdr
 
 
+    def NOP(self, a=None, b=None):
+        """No operation."""
+        pass
+
+
     def LDI(self, a=None, b=None):
         """Load Register Immediate"""
 
@@ -145,10 +195,88 @@ class CPU:
         self.alu('MUL', a, b)
         self.pc += 3
 
+    
+    def DIV(self, a=None, b=None):
+        """Divide"""
+
+        self.alu('DIV', a, b)
+        self.pc += 3
+
+
+    def MOD(self, a=None, b=None):
+        """Modulo"""
+
+        self.alu('MOD', a, b)
+        self.pc += 3
+
+
     def ADD(self, a=None, b=None):
         """Addition"""
 
         self.alu('ADD', a, b)
+        self.pc += 3
+
+    
+    def SUB(self, a=None, b=None):
+        """Subtraction"""
+
+        self.alu('SUB', a, b)
+        self.pc += 3
+
+    
+    def AND(self, a=None, b=None):
+        """Bitwise AND"""
+
+        self.alu('AND', a, b)
+        self.pc += 3
+
+
+    def OR(self, a=None, b=None):
+        """Bitwise OR"""
+
+        self.alu('OR', a, b)
+        self.pc += 3
+
+    
+    def XOR(self, a=None, b=None):
+        """Bitwise XOR"""
+
+        self.alu('XOR', a, b)
+        self.pc += 3
+
+
+    def NOT(self, a=None, b=None):
+        """Bitwise NOT"""
+
+        self.alu('NOT', a, b)
+        self.pc += 2
+
+
+    def INC(self, a=None, b=None):
+        """Increment by 1."""
+
+        self.alu('INC', a, b)
+        self.pc += 2
+
+    
+    def DEC(self, a=None, b=None):
+        """Decrement by 1."""
+
+        self.alu('DEC', a, b)
+        self.pc += 2
+
+
+    def SHL(self, a=None, b=None):
+        """Bitwise shift left."""
+
+        self.alu('SHL', a, b)
+        self.pc += 3
+
+    
+    def SHR(self, a=None, b=None):
+        """Bitwise shift right."""
+
+        self.alu('SHR', a, b)
         self.pc += 3
 
 
