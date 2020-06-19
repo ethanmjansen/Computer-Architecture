@@ -14,6 +14,9 @@ class CPU:
         self.running = True
         self.sp = 7
         self.reg[self.sp] = 0xf4
+        self.e = 0
+        self.l = 0
+        self.g = 0
 
         self.branch_table = {
              0b10000010: self.LDI,
@@ -24,7 +27,11 @@ class CPU:
              0b01000110: self.POP,
              0b01010000: self.CALL,
              0b00010001: self.RET,
-             0b10100000: self.ADD
+             0b10100000: self.ADD,
+             0b10100111: self.CMP,
+             0b01010100: self.JMP,
+             0b01010101: self.JEQ,
+             0b01010110: self.JNE
         }
         
 
@@ -60,8 +67,24 @@ class CPU:
         elif op == "MUL":
             self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
 
+        elif op == "CMP":
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.l = 0
+                self.g = 0
+                self.e = 1
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.l = 1
+                self.g = 0
+                self.e = 0
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.l = 0
+                self.g = 1
+                self.e = 0
+
         else:
             raise Exception("Unsupported ALU operation")
+
+        self.pc += 3
 
     def trace(self):
         """
@@ -129,6 +152,11 @@ class CPU:
         self.pc += 3
 
 
+    def CMP(self, a=None, b=None):
+        """Compares values in the registers."""
+        self.alu('CMP', a, b)
+
+
     def PUSH(self, a=None, b=None):
         """Add to the Stack."""
 
@@ -180,6 +208,30 @@ class CPU:
         self.pc = return_addr
 
         self.reg[self.sp] += 1
+
+
+    def JMP(self, a=None, b=None):
+        """Jump to address in register."""
+
+        self.pc = self.reg[a]
+
+
+    def JNE(self, a=None, b=None):
+        """JNE register."""
+
+        if self.e == 0:
+            self.JMP(a)
+        else:
+            self.pc += 2
+
+    
+    def JEQ(self, a=None, b=None):
+        """JEQ register."""
+
+        if self.e == 1:
+            self.JMP(a)
+        else:
+            self.pc += 2
 
 
     def run(self):
